@@ -35,6 +35,9 @@ require_once 'Ossec/AlertList.php';
 //TODO: This can probably be a method of AlertList
 function __os_createresults($out_file, $alert_list)
 {
+    if ($alert_list->size() == 0)  
+      return;
+
     /* Opening output file */
     $fp = fopen($out_file, "w");
     if(!$fp) {
