@@ -194,7 +194,10 @@ function __os_parsealert(&$fp, $curr_time,
 
         /* Getting location */
         $buffer = fgets($fp, 1024);
-        $evt_location = substr($buffer, 21);
+        $buffer = substr($buffer, 21);
+        strtok($buffer, " "); // hostname
+        $evt_srcip = strtok("-");
+        $evt_location = strtok(">\n");
         if($location_pattern)
         {
             if(strpos($evt_location, $location_pattern) === FALSE)
@@ -208,6 +211,24 @@ function __os_parsealert(&$fp, $curr_time,
                     continue;
             }
         }
+
+        /* srcip  */
+        
+        if($srcip_pattern != NULL)
+        {
+            if(strpos($evt_srcip,$srcip_pattern) === FALSE)
+            {
+                if(!$rc_code_hash{'srcip_pattern'})
+                    continue;
+            }
+            else
+            {
+                if($rc_code_hash{'srcip_pattern'})
+                    continue;
+            }
+        }
+        
+
 
 
         /* Getting rule, level and description */
@@ -258,26 +279,6 @@ function __os_parsealert(&$fp, $curr_time,
         $token = strtok("'");
         $evt_description = $token;
 
-
-        /* srcip */
-        $buffer = fgets($fp, 1024);
-        $buffer = rtrim($buffer);
-        $evt_srcip = substr($buffer, 8);
-        
-        if($srcip_pattern != NULL)
-        {
-            if(strpos($evt_srcip,$srcip_pattern) === FALSE)
-            {
-                if(!$rc_code_hash{'srcip_pattern'})
-                    continue;
-            }
-            else
-            {
-                if($rc_code_hash{'srcip_pattern'})
-                    continue;
-            }
-        }
-        
 
         /* user */
         $buffer = fgets($fp, 1024);
@@ -829,8 +830,8 @@ function os_getalerts($ossec_handle, $init_time, $final_time, $max_count)
         /* Getting file size */            
         $f_size = filesize($log_file);
         
-        /* Average size of every event: 300-350 */
-        $f_point = $max_count * 325;
+        /* Average size of every event: ~900 */
+        $f_point = $max_count * 900;
         
         
         /* If file size is large than the counter fseek to the
@@ -839,7 +840,7 @@ function os_getalerts($ossec_handle, $init_time, $final_time, $max_count)
         if($f_size > $f_point)
         {
             $seek_place = $f_size - $f_point;
-            fseek($fp, $seek_place, "SEEK_SET");
+            fseek($fp, $seek_place, SEEK_SET);
         }
     }
     
